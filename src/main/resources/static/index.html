@@ -1,0 +1,95 @@
+<html ng-app="notesApp">
+<head>
+    <title>Notes App</title>
+    <link href="lib/flat-ui/dist/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/flat-ui/dist/css/flat-ui.css" rel="stylesheet">
+    <link href="lib/angularjs-toaster/toaster.css" rel="stylesheet">
+
+    <link href="css/client.css" rel="stylesheet">
+</head>
+<body ng-controller="MainCtrl as ctrl">
+<form ng-submit="ctrl.submit()" name="myForm">
+    <input type="text"
+           ng-model="ctrl.username"
+           required
+           ng-minlength="3">
+    <input type="submit"
+           value="Submit"
+           ng-disabled="myForm.$invalid">
+</form>
+
+<div ng-repeat="message in ctrl.messages track by $index">
+    {{message}}<br>
+</div>
+<form ng-submit="ctrl.sendCommand()" name="commandForm">
+    <input type="text"
+           ng-model="ctrl.command">
+    <input type="submit"
+           value="Send">
+</form>
+
+<script
+        src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.js">
+</script>
+<script src="lib/sockjs/sockjs.min.js"></script>
+<script src="lib/stomp/lib/stomp.min.js"></script>
+<script type="text/javascript">
+angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
+    var self = this;
+    self.username = '';
+    self.command = '';
+    self.stompClient = null;
+    self.messages = [];
+    self.submit = function() {
+        console.log('User clicked submit with ', self.username);
+        var socket = new SockJS('/openmud');
+        self.stompClient = Stomp.over(socket);
+
+
+        self.stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+
+                self.stompClient.subscribe('/topic/player.login', function(message) {
+                    console.log("Got message on PLAYER.LOGIN channel", message);
+                    sc.$apply(function() {
+                        self.messages.push(JSON.parse(message.body).response);
+                    });
+                    console.log("Messages ", self.messages);
+                });
+
+                self.stompClient.subscribe('/topic/global', function(message){
+                    console.log("Got message on GLOBAL channel", message);
+                    sc.$apply(function() {
+                        self.messages.push(JSON.parse(message.body).message);
+                    });
+                    console.log("Messages ", self.messages);
+
+                });
+
+                self.stompClient.subscribe('/topic/location', function(message){
+                    console.log("Got message on LOCATION channel", message);
+                    sc.$apply(function() {
+                        self.messages.push(JSON.parse(message.body).response);
+                    });
+                    console.log("Messages ", self.messages);
+                });
+
+                self.stompClient.subscribe('/user/queue/private', function(message) {
+                    console.log("Got message on PRIVATE channel", message);
+                    sc.$apply(function() {
+                        self.messages.push(JSON.parse(message.body).response);
+                    });
+                    console.log("Messages ", self.messages);
+                });
+
+                self.stompClient.send("/app/player.login", {}, JSON.stringify({ 'playerName': self.username }));
+        });
+    };
+
+    self.sendCommand = function() {
+        self.stompClient.send("/app/playerInput", {}, JSON.stringify({ 'command': self.command, 'playerName': self.username }));
+    }
+}]);
+</script>
+</body>
+</html>
