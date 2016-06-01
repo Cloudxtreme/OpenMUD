@@ -8,14 +8,14 @@ import java.util.Map;
 public class Location {
     private int id;
     private String shortDescription;
-    private String longDescirption;
+    private String longDescription;
     private Map<Exit, Location> exits = new EnumMap<>(Exit.class);
     private List<Player> players = new ArrayList<>();
 
     public Location(int id, String shortDescription, String longDescription) {
         this.id = id;
         this.shortDescription = shortDescription;
-        this.longDescirption = longDescription;
+        this.longDescription = longDescription;
     }
 
     public int getId() {
@@ -26,8 +26,8 @@ public class Location {
         return shortDescription;
     }
 
-    public String getLongDescirption() {
-        return longDescirption;
+    public String getLongDescription() {
+        return longDescription;
     }
 
     public void addExit(Exit exit, Location location) {
@@ -40,6 +40,7 @@ public class Location {
 
     public void addPlayer(Player player) {
         this.players.add(player);
+        player.setCurrentLocation(this);
     }
 
     public List<Player> getPlayers() {
@@ -48,5 +49,16 @@ public class Location {
 
     public void removePlayer(Player player) {
         players.remove(player);
+    }
+
+    public String getResponse(Player player) {
+        StringBuffer sb = new StringBuffer("{");
+        sb.append("\"type\": \"Location\"");
+        sb.append(",");
+        sb.append("\"short\": \""+this.shortDescription+"\"");
+        sb.append(",");
+        sb.append("\"long\": \""+this.longDescription+"\"");
+        sb.append("}");
+        return sb.toString();
     }
 }

@@ -14,7 +14,7 @@ public class LocationTest {
         Location location = new Location(1, "Test location", "This is test location");
         assertEquals(location.getId(), 1);
         assertEquals(location.getShortDescription(), "Test location");
-        assertEquals(location.getLongDescirption(), "This is test location");
+        assertEquals(location.getLongDescription(), "This is test location");
     }
 
     @Test
