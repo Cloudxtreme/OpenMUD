@@ -5,6 +5,7 @@ import java.util.Objects;
 public class Player {
     private int id;
     private String name;
+    private Location currentLocation;
 
     public Player(int id, String name) {
         this.id = id;
@@ -30,5 +31,9 @@ public class Player {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public void setCurrentLocation(Location currentLocation) {
+        this.currentLocation = currentLocation;
     }
 }

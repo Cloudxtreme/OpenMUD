@@ -27,6 +27,10 @@
     <input type="submit"
            value="Send">
 </form>
+<div>
+    <b>{{ctrl.locationShort}}</b><br>
+    {{ctrl.locationLong}}
+</div>
 
 <script
         src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.js">
@@ -38,6 +42,8 @@ angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
     var self = this;
     self.username = '';
     self.command = '';
+    self.locationShort = '';
+    self.locationLong = '';
     self.stompClient = null;
     self.messages = [];
     self.submit = function() {
@@ -66,18 +72,19 @@ angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
 
                 });
 
-                self.stompClient.subscribe('/topic/location', function(message){
-                    console.log("Got message on LOCATION channel", message);
-                    sc.$apply(function() {
-                        self.messages.push(JSON.parse(message.body).response);
-                    });
-                    console.log("Messages ", self.messages);
-                });
-
                 self.stompClient.subscribe('/user/queue/private', function(message) {
                     console.log("Got message on PRIVATE channel", message);
                     sc.$apply(function() {
-                        self.messages.push(JSON.parse(message.body).response);
+                        var responseAsString = JSON.parse(message.body).response;
+                        var response = JSON.parse(responseAsString);
+                        if(response.type==='Location') {
+                          self.locationShort = response.short;
+                          self.messages.push(response.short);
+                          self.locationLong = response.long;
+                          self.messages.push(response.long);
+                        } else {
+                          self.messages.push(JSON.parse(message.body).response);
+                        }
                     });
                     console.log("Messages ", self.messages);
                 });

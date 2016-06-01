@@ -1,4 +1,4 @@
-package pl.com.clockworkgnome.openmud.communication;
+package pl.com.clockworkgnome.openmud.communication.messages;
 
 public class CommandMessage {
 
