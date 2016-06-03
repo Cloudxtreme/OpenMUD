@@ -8,6 +8,8 @@ public class CommandMessage {
 
     private String command;
 
+    private String payload;
+
     public CommandMessage() {}
 
     public CommandMessage(String playerName, String command) {
@@ -33,5 +35,13 @@ public class CommandMessage {
 
     public void setResponse(String response) {
         this.response = response;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 }
