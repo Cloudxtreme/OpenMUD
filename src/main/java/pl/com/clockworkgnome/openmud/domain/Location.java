@@ -1,9 +1,8 @@
 package pl.com.clockworkgnome.openmud.domain;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import com.google.gson.Gson;
+
+import java.util.*;
 
 public class Location {
     private int id;
@@ -58,7 +57,20 @@ public class Location {
         sb.append("\"short\": \""+this.shortDescription+"\"");
         sb.append(",");
         sb.append("\"long\": \""+this.longDescription+"\"");
-        sb.append("}");
+        sb.append(",");
+        List<Player> playersWithourPlayer = new ArrayList<>(players);
+        playersWithourPlayer.remove(player);
+        sb.append("\"players\":[");
+        int size = playersWithourPlayer.size();
+        if(size==1) {
+            sb.append("{\"name\":\""+playersWithourPlayer.get(0).getName()+"\"}");
+        } else if(size>1) {
+            for(int i=0;i<size-1;i++) {
+                sb.append("{\"name\":\""+playersWithourPlayer.get(i).getName()+"\"},");
+            }
+            sb.append("{\"name\":\""+playersWithourPlayer.get(size-1).getName()+"\"}");
+        }
+        sb.append("]}");
         return sb.toString();
     }
 }

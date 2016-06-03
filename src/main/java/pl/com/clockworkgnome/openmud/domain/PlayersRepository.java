@@ -9,9 +9,13 @@ import java.util.Map;
 @Repository
 public class PlayersRepository {
 
-    private Map<Integer,Player> players = new HashMap<>();
+    private Map<String,Player> players = new HashMap<>();
 
     public void add(Player player) {
-        this.players.put(player.getId(),player);
+        this.players.put(player.getName(),player);
+    }
+
+    public Player get(String playerName) {
+        return players.get(playerName);
     }
 }
