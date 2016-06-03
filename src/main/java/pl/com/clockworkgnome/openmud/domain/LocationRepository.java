@@ -5,9 +5,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class LocationRepository {
 
+    Location startingLocation;
+
 
     public Location getStartingLocation() {
-        Location starting = new Location(1,"Short description","Long description of starting location");
-        return starting;
+        if(startingLocation==null) {
+            startingLocation = new Location(1,"Short description","Long description of starting location");
+        }
+        return startingLocation;
     }
 }

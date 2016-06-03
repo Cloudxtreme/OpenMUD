@@ -33,8 +33,8 @@ public class LocationTest {
     @Test
     public void addPlayerToLocation() {
         Location location = new Location(1, "Test location", "This is test location.");
-        Player player1 = new Player(1, "Ulik");
-        Player player2 = new Player(2, "Felie");
+        Player player1 = new Player("Ulik","s");
+        Player player2 = new Player("Felie","s");
 
         location.addPlayer(player1);
         location.addPlayer(player2);
