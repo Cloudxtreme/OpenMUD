@@ -23,7 +23,7 @@
 </div>
 <form ng-submit="ctrl.sendCommand()" name="commandForm">
     <input type="text"
-           ng-model="ctrl.command">
+           ng-model="ctrl.commandLine">
     <input type="submit"
            value="Send">
 </form>
@@ -42,7 +42,7 @@
 angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
     var self = this;
     self.username = '';
-    self.command = '';
+    self.commandLine = '';
     self.locationShort = '';
     self.locationLong = '';
     self.stompClient = null;
@@ -90,7 +90,9 @@ angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
                           self.locationPlayers = self.players.map(function(elem){
                             return elem.name;
                           }).join(",");
-                        } else {
+                        }else if(response.type==='Say') {
+                          self.messages.push(response.message);
+                        }else {
                           self.messages.push(JSON.parse(message.body).response);
                         }
                     });
@@ -102,8 +104,13 @@ angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
     };
 
     self.sendCommand = function() {
-        self.stompClient.send("/app/playerInput", {}, JSON.stringify({ 'command': self.command, 'playerName': self.username }));
-    }
+        var firstWord = self.commandLine.substr(0, self.commandLine.indexOf(" "));
+        if(firstWord.toUpperCase()==='SAY') {
+            self.stompClient.send("/app/playerInput", {}, JSON.stringify({ 'command': firstWord.toUpperCase(), 'playerName': self.username, 'payload': self.commandLine.split(' ').slice(1).join(' ') }));
+        } else {
+            self.stompClient.send("/app/playerInput", {}, JSON.stringify({ 'command': self.commandLine.toUpperCase(), 'playerName': self.username, 'payload':'' }));
+        }
+    };
 }]);
 </script>
 </body>
