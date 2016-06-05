@@ -70,7 +70,21 @@ public class Location {
             }
             sb.append("{\"name\":\""+playersWithourPlayer.get(size-1).getName()+"\"}");
         }
-        sb.append("]}");
+        sb.append("]");
+        sb.append(",");
+        sb.append("\"exits\":[");
+        int noExits = exits.size();
+        Set<Exit> exits = this.exits.keySet();
+        int i = 0;
+        for(Exit e : exits) {
+            i++;
+            sb.append("{\"exit\":\""+e.exitString+"\"}");
+            if(i<size) {
+                sb.append(",");
+            }
+        }
+        sb.append("]");
+        sb.append("}");
         return sb.toString();
     }
 }

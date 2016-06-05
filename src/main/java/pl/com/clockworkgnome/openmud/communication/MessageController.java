@@ -12,14 +12,12 @@ import org.springframework.stereotype.Controller;
 import pl.com.clockworkgnome.openmud.communication.messages.CommandMessage;
 import pl.com.clockworkgnome.openmud.communication.messages.GlobalMessage;
 import pl.com.clockworkgnome.openmud.communication.messages.LoginMessage;
-import pl.com.clockworkgnome.openmud.domain.Location;
-import pl.com.clockworkgnome.openmud.domain.LocationRepository;
-import pl.com.clockworkgnome.openmud.domain.Player;
-import pl.com.clockworkgnome.openmud.domain.PlayersRepository;
+import pl.com.clockworkgnome.openmud.domain.*;
 
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class MessageController {
@@ -52,9 +50,10 @@ public class MessageController {
     @MessageMapping("/playerInput")
     @SendToUser("/queue/private")
     public CommandMessage handleCommand(CommandMessage message) {
-        System.out.println("Command message from: " + message.getPlayerName() + " command: " + message.getCommand());
+        String command = message.getCommand();
+        System.out.println("Command message from: " + message.getPlayerName() + " command: " + command);
         Player player = playersRepository.get(message.getPlayerName());
-        switch(message.getCommand()) {
+        switch(command) {
             case "LOOK":
                 message.setResponse(player.getCurrentLocation().getResponse(player));
                 break;
@@ -70,7 +69,22 @@ public class MessageController {
                 }
                 break;
             default:
-                message.setResponse("\"message\":\"Unknown command\"");
+                Map<Exit, Location> exits = player.getCurrentLocation().getExits();
+                for(Exit e : exits.keySet()) {
+                    if(command.equalsIgnoreCase(e.exitString) || command.equalsIgnoreCase(e.shortString)) {
+                        Location newLocation = exits.get(e);
+                        Location oldLocation = player.getCurrentLocation();
+                        oldLocation.removePlayer(player);
+                        player.setCurrentLocation(newLocation);
+                        message.setResponse(player.getCurrentLocation().getResponse(player));
+                        CommandMessage responseForPlayersEx = new CommandMessage(player.getName(),"LEAVES");
+                        responseForPlayersEx.setResponse(getSayOtherResponseLeaves(message,e.exitString));
+                        for(Player p : oldLocation.getPlayers()) {
+                            template.convertAndSendToUser(p.getSessionId(),"/queue/private", responseForPlayersEx, createHeaders(p.getSessionId()));
+                        }
+                        break;
+                    }
+                }
         }
         System.out.println("Command response: " + message.getResponse());
         return message;
@@ -90,6 +104,15 @@ public class MessageController {
         sb.append("\"type\": \"Say\"");
         sb.append(",");
         sb.append("\"message\":\""+ message.getPlayerName()+ " says: "+message.getPayload()+"\"");
+        sb.append("}");
+        return sb.toString();
+    }
+
+    private String getSayOtherResponseLeaves(CommandMessage message, String where) {
+        StringBuffer sb = new StringBuffer("{");
+        sb.append("\"type\": \"Leaves\"");
+        sb.append(",");
+        sb.append("\"message\":\""+ message.getPlayerName()+ " goes " + where + "\"");
         sb.append("}");
         return sb.toString();
     }

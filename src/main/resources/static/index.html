@@ -30,7 +30,8 @@
 <div>
     <b>{{ctrl.locationShort}}</b><br>
     {{ctrl.locationLong}}<br>
-    {{ctrl.locationPlayers}}
+    {{ctrl.locationPlayers}}<br>
+    Visible exits: {{ctrl.locationExits}}
 </div>
 
 <script
@@ -48,7 +49,8 @@ angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
     self.stompClient = null;
     self.messages = [];
     self.players = [];
-    self.locationPlayers = ''
+    self.locationPlayers = '';
+    self.locationExits = '';
     self.submit = function() {
         console.log('User clicked submit with ', self.username);
         var socket = new SockJS('/openmud');
@@ -89,6 +91,9 @@ angular.module('notesApp', []).controller('MainCtrl', ['$scope', function(sc) {
                           self.players = response.players;
                           self.locationPlayers = self.players.map(function(elem){
                             return elem.name;
+                          }).join(",");
+                          self.locationExits = response.exits.map(function(elem){
+                            return elem.exit;
                           }).join(",");
                         }else if(response.type==='Say') {
                           self.messages.push(response.message);
