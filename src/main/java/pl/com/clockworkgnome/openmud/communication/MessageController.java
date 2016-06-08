@@ -14,8 +14,6 @@ import pl.com.clockworkgnome.openmud.communication.messages.GlobalMessage;
 import pl.com.clockworkgnome.openmud.communication.messages.LoginMessage;
 import pl.com.clockworkgnome.openmud.domain.*;
 
-import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,57 +35,76 @@ public class MessageController {
     public LoginMessage handleLogin(LoginMessage message, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("Login message from: " + message.getPlayerName());
         String sessionId = headerAccessor.getSessionId();
+        initNewPlayer(message, sessionId);
+        sendGlobalMessage("New player connected: " + message.getPlayerName());
+        return message;
+    }
+
+    private void sendGlobalMessage(String message) {
+        template.convertAndSend("/topic/global", new GlobalMessage(message));
+    }
+
+    private void initNewPlayer(LoginMessage message, String sessionId) {
         Player player = new Player(message.getPlayerName(),sessionId);
-        // /queue/private{sessionId}
         playersRepository.add(player);
         Location starting = locationRepository.getStartingLocation();
         starting.addPlayer(player);
         message.setResponse(starting.getResponse(player));
-        template.convertAndSend("/topic/global", new GlobalMessage("New player connected: " + message.getPlayerName()));
-        return message;
     }
 
     @MessageMapping("/playerInput")
     @SendToUser("/queue/private")
     public CommandMessage handleCommand(CommandMessage message) {
         String command = message.getCommand();
-        System.out.println("Command message from: " + message.getPlayerName() + " command: " + command);
         Player player = playersRepository.get(message.getPlayerName());
+        System.out.println("Command message from: " + message.getPlayerName() + " command: " + command);
         switch(command) {
             case "LOOK":
-                message.setResponse(player.getCurrentLocation().getResponse(player));
+                lookCommand(message, player);
                 break;
             case "SAY":
-                message.setResponse(getSayResponse(message));
-                List<Player> playersOnLocation = player.getCurrentLocation().getPlayers();
-                CommandMessage responseForPlayers = new CommandMessage(player.getName(),"SAY");
-                responseForPlayers.setResponse(getSayOtherResponse(message));
-                for(Player p : playersOnLocation) {
-                    if(!p.equals(player)) {
-                        template.convertAndSendToUser(p.getSessionId(),"/queue/private", responseForPlayers, createHeaders(p.getSessionId()));
-                    }
-                }
+                sayCommand(message, player);
                 break;
             default:
-                Map<Exit, Location> exits = player.getCurrentLocation().getExits();
-                for(Exit e : exits.keySet()) {
-                    if(command.equalsIgnoreCase(e.exitString) || command.equalsIgnoreCase(e.shortString)) {
-                        Location newLocation = exits.get(e);
-                        Location oldLocation = player.getCurrentLocation();
-                        oldLocation.removePlayer(player);
-                        player.setCurrentLocation(newLocation);
-                        message.setResponse(player.getCurrentLocation().getResponse(player));
-                        CommandMessage responseForPlayersEx = new CommandMessage(player.getName(),"LEAVES");
-                        responseForPlayersEx.setResponse(getSayOtherResponseLeaves(message,e.exitString));
-                        for(Player p : oldLocation.getPlayers()) {
-                            template.convertAndSendToUser(p.getSessionId(),"/queue/private", responseForPlayersEx, createHeaders(p.getSessionId()));
-                        }
-                        break;
-                    }
-                }
+                unknowCommand(message, command, player);
         }
         System.out.println("Command response: " + message.getResponse());
         return message;
+    }
+
+    private void unknowCommand(CommandMessage message, String command, Player player) {
+        Map<Exit, Location> exits = player.getCurrentLocation().getExits();
+        for(Exit e : exits.keySet()) {
+            if(command.equalsIgnoreCase(e.exitString) || command.equalsIgnoreCase(e.shortString)) {
+                Location newLocation = exits.get(e);
+                Location oldLocation = player.getCurrentLocation();
+                oldLocation.removePlayer(player);
+                player.setCurrentLocation(newLocation);
+                message.setResponse(player.getCurrentLocation().getResponse(player));
+                CommandMessage responseForPlayersEx = new CommandMessage(player.getName(),"LEAVES");
+                responseForPlayersEx.setResponse(getSayOtherResponseLeaves(message,e.exitString));
+                for(Player p : oldLocation.getPlayers()) {
+                    template.convertAndSendToUser(p.getSessionId(),"/queue/private", responseForPlayersEx, createHeaders(p.getSessionId()));
+                }
+                break;
+            }
+        }
+    }
+
+    private void sayCommand(CommandMessage message, Player player) {
+        message.setResponse(getSayResponse(message));
+        List<Player> playersOnLocation = player.getCurrentLocation().getPlayers();
+        CommandMessage responseForPlayers = new CommandMessage(player.getName(),"SAY");
+        responseForPlayers.setResponse(getSayOtherResponse(message));
+        for(Player p : playersOnLocation) {
+            if(!p.equals(player)) {
+                template.convertAndSendToUser(p.getSessionId(),"/queue/private", responseForPlayers, createHeaders(p.getSessionId()));
+            }
+        }
+    }
+
+    private void lookCommand(CommandMessage message, Player player) {
+        message.setResponse(player.getCurrentLocation().getResponse(player));
     }
 
     private String getSayResponse(CommandMessage message) {
