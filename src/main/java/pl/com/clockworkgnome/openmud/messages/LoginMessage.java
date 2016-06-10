@@ -1,4 +1,4 @@
-package pl.com.clockworkgnome.openmud.communication.messages;
+package pl.com.clockworkgnome.openmud.messages;
 
 public class LoginMessage {
 

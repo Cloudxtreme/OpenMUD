@@ -1,24 +1,19 @@
-package pl.com.clockworkgnome.openmud.communication;
+package pl.com.clockworkgnome.openmud.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.stereotype.Controller;
-import pl.com.clockworkgnome.openmud.communication.messages.CommandMessage;
-import pl.com.clockworkgnome.openmud.communication.messages.GlobalMessage;
-import pl.com.clockworkgnome.openmud.communication.messages.LoginMessage;
+import org.springframework.stereotype.Service;
 import pl.com.clockworkgnome.openmud.domain.*;
+import pl.com.clockworkgnome.openmud.messages.CommandMessage;
 
 import java.util.List;
 import java.util.Map;
 
-@Controller
-public class MessageController {
+@Service
+public class CommandMessageHandler {
 
     @Autowired
     private SimpMessagingTemplate template;
@@ -30,34 +25,7 @@ public class MessageController {
     private PlayersRepository playersRepository;
 
 
-    @MessageMapping("/player.login")
-    @SendToUser("/queue/private")
-    public LoginMessage handleLogin(LoginMessage message, SimpMessageHeaderAccessor headerAccessor) {
-        System.out.println("Login message from: " + message.getPlayerName());
-        String sessionId = headerAccessor.getSessionId();
-        initNewPlayer(message, sessionId);
-        sendGlobalMessage("New player connected: " + message.getPlayerName());
-        return message;
-    }
-
-    private void sendGlobalMessage(String message) {
-        template.convertAndSend("/topic/global", new GlobalMessage(message));
-    }
-
-    private void initNewPlayer(LoginMessage message, String sessionId) {
-        Player player = new Player(message.getPlayerName(),sessionId);
-        playersRepository.add(player);
-        Location starting = locationRepository.getStartingLocation();
-        starting.addPlayer(player);
-        message.setResponse(starting.getResponse(player));
-    }
-
-    @MessageMapping("/playerInput")
-    @SendToUser("/queue/private")
-    public CommandMessage handleCommand(CommandMessage message) {
-        String command = message.getCommand();
-        Player player = playersRepository.get(message.getPlayerName());
-        System.out.println("Command message from: " + message.getPlayerName() + " command: " + command);
+    public CommandMessage handleCommandMessage(CommandMessage message, String command, Player player) {
         switch(command) {
             case "LOOK":
                 lookCommand(message, player);
@@ -80,7 +48,7 @@ public class MessageController {
                 Location oldLocation = player.getCurrentLocation();
                 oldLocation.removePlayer(player);
                 player.setCurrentLocation(newLocation);
-                message.setResponse(player.getCurrentLocation().getResponse(player));
+                lookCommand(message,player);
                 CommandMessage responseForPlayersEx = new CommandMessage(player.getName(),"LEAVES");
                 responseForPlayersEx.setResponse(getSayOtherResponseLeaves(message,e.exitString));
                 for(Player p : oldLocation.getPlayers()) {
@@ -134,16 +102,12 @@ public class MessageController {
         return sb.toString();
     }
 
-    @SendTo("/topic/global")
-    public GlobalMessage handleGlobal(GlobalMessage message) {
-        System.out.println("Global message " + message.getMessage());
-        return message;
-    }
-
     private MessageHeaders createHeaders(String sessionId) {
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
         headerAccessor.setSessionId(sessionId);
         headerAccessor.setLeaveMutable(true);
         return headerAccessor.getMessageHeaders();
     }
+
+
 }
