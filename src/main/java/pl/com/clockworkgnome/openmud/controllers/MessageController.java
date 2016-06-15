@@ -14,6 +14,7 @@ import pl.com.clockworkgnome.openmud.messages.GlobalMessage;
 import pl.com.clockworkgnome.openmud.messages.LoginMessage;
 import pl.com.clockworkgnome.openmud.domain.*;
 import pl.com.clockworkgnome.openmud.services.CommandMessageHandler;
+import pl.com.clockworkgnome.openmud.util.CommandHandlerResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -23,9 +24,6 @@ public class MessageController {
 
     @Autowired
     private SimpMessagingTemplate template;
-
-    @Autowired
-    private LocationRepository locationRepository;
 
     @Autowired
     private PlayersRepository playersRepository;
@@ -39,7 +37,8 @@ public class MessageController {
     public LoginMessage handleLogin(LoginMessage message, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("Login message from: " + message.getPlayerName());
         String sessionId = headerAccessor.getSessionId();
-        initNewPlayer(message, sessionId);
+        String response = initNewPlayer(message.getPlayerName(), sessionId);
+        message.setResponse(response);
         return message;
     }
 
@@ -49,7 +48,25 @@ public class MessageController {
         String command = message.getCommand();
         Player player = playersRepository.get(message.getPlayerName());
         System.out.println("Command message from: " + message.getPlayerName() + " command: " + command);
-        return commandMessageHandler.handleCommandMessage(message, command, player);
+        CommandHandlerResponse rsp = commandMessageHandler.handleCommandMessage(message, command, player);
+        if(rsp.callerResponse!=null  && !rsp.callerResponse.isEmpty()) {
+            message.setResponse(rsp.callerResponse);
+        }
+        if(rsp.playersOnLocationResponse!=null && !rsp.playersOnLocationResponse.isEmpty()) {
+            sendToPlayersOnLocation(player, rsp);
+        }
+        return message;
+    }
+
+    private void sendToPlayersOnLocation(Player player, CommandHandlerResponse rsp) {
+        List<Player> playersOnLocation = player.getCurrentLocation().getPlayers();
+        CommandMessage responseForPlayers = new CommandMessage(player.getName(),"RESPONSE");
+        responseForPlayers.setResponse(rsp.playersOnLocationResponse);
+        for(Player p : playersOnLocation) {
+            if (!p.equals(player)) {
+                template.convertAndSendToUser(p.getSessionId(), "/queue/private", responseForPlayers, createHeaders(p.getSessionId()));
+            }
+        }
     }
 
     @SendTo("/topic/global")
@@ -62,9 +79,15 @@ public class MessageController {
         template.convertAndSend("/topic/global", new GlobalMessage(message));
     }
 
-    private void initNewPlayer(LoginMessage message, String sessionId) {
-        String playerName = message.getPlayerName();
+    private String initNewPlayer(String playerName, String sessionId) {
         Player newPlayer = playersRepository.initPlayer(playerName, sessionId);
-        message.setResponse(newPlayer.getCurrentLocation().getResponse(newPlayer));
+        return newPlayer.getCurrentLocation().getResponse(newPlayer);
+    }
+
+    private MessageHeaders createHeaders(String sessionId) {
+        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
+        headerAccessor.setSessionId(sessionId);
+        headerAccessor.setLeaveMutable(true);
+        return headerAccessor.getMessageHeaders();
     }
 }

@@ -87,4 +87,22 @@ public class Location {
         sb.append("}");
         return sb.toString();
     }
+
+    public boolean doesExitExists(String exit) {
+        for(Exit e : exits.keySet()) {
+            if(exit.equalsIgnoreCase(e.exitString) || exit.equalsIgnoreCase(e.shortString)) {
+               return true;
+            }
+        }
+        return false;
+    }
+
+    public Location getNextLocation(String exit) {
+        for(Exit e : exits.keySet()) {
+            if(exit.equalsIgnoreCase(e.exitString) || exit.equalsIgnoreCase(e.shortString)) {
+                return exits.get(e);
+            }
+        }
+        return null;
+    }
 }
