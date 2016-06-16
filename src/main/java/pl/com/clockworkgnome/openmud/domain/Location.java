@@ -50,44 +50,6 @@ public class Location {
         players.remove(player);
     }
 
-    public String getResponse(Player player) {
-        StringBuffer sb = new StringBuffer("{");
-        sb.append("\"type\": \"Location\"");
-        sb.append(",");
-        sb.append("\"short\": \""+this.shortDescription+"\"");
-        sb.append(",");
-        sb.append("\"long\": \""+this.longDescription+"\"");
-        sb.append(",");
-        List<Player> playersWithourPlayer = new ArrayList<>(players);
-        playersWithourPlayer.remove(player);
-        sb.append("\"players\":[");
-        int size = playersWithourPlayer.size();
-        if(size==1) {
-            sb.append("{\"name\":\""+playersWithourPlayer.get(0).getName()+"\"}");
-        } else if(size>1) {
-            for(int i=0;i<size-1;i++) {
-                sb.append("{\"name\":\""+playersWithourPlayer.get(i).getName()+"\"},");
-            }
-            sb.append("{\"name\":\""+playersWithourPlayer.get(size-1).getName()+"\"}");
-        }
-        sb.append("]");
-        sb.append(",");
-        sb.append("\"exits\":[");
-        int noExits = exits.size();
-        Set<Exit> exits = this.exits.keySet();
-        int i = 0;
-        for(Exit e : exits) {
-            i++;
-            sb.append("{\"exit\":\""+e.exitString+"\"}");
-            if(i<size) {
-                sb.append(",");
-            }
-        }
-        sb.append("]");
-        sb.append("}");
-        return sb.toString();
-    }
-
     public boolean doesExitExists(String exit) {
         for(Exit e : exits.keySet()) {
             if(exit.equalsIgnoreCase(e.exitString) || exit.equalsIgnoreCase(e.shortString)) {

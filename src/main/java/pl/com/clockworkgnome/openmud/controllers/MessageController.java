@@ -17,7 +17,6 @@ import pl.com.clockworkgnome.openmud.services.CommandMessageHandler;
 import pl.com.clockworkgnome.openmud.util.CommandHandlerResponse;
 
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class MessageController {
@@ -37,8 +36,8 @@ public class MessageController {
     public LoginMessage handleLogin(LoginMessage message, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("Login message from: " + message.getPlayerName());
         String sessionId = headerAccessor.getSessionId();
-        String response = initNewPlayer(message.getPlayerName(), sessionId);
-        message.setResponse(response);
+        initNewPlayer(message.getPlayerName(), sessionId);
+        message.setResponse("You're logged in, type 'look' to look around.");
         return message;
     }
 
@@ -53,12 +52,12 @@ public class MessageController {
             message.setResponse(rsp.callerResponse);
         }
         if(rsp.playersOnLocationResponse!=null && !rsp.playersOnLocationResponse.isEmpty()) {
-            sendToPlayersOnLocation(player, rsp);
+            sendToOtherPlayersOnLocation(player, rsp);
         }
         return message;
     }
 
-    private void sendToPlayersOnLocation(Player player, CommandHandlerResponse rsp) {
+    private void sendToOtherPlayersOnLocation(Player player, CommandHandlerResponse rsp) {
         List<Player> playersOnLocation = player.getCurrentLocation().getPlayers();
         CommandMessage responseForPlayers = new CommandMessage(player.getName(),"RESPONSE");
         responseForPlayers.setResponse(rsp.playersOnLocationResponse);
@@ -79,9 +78,8 @@ public class MessageController {
         template.convertAndSend("/topic/global", new GlobalMessage(message));
     }
 
-    private String initNewPlayer(String playerName, String sessionId) {
-        Player newPlayer = playersRepository.initPlayer(playerName, sessionId);
-        return newPlayer.getCurrentLocation().getResponse(newPlayer);
+    private void initNewPlayer(String playerName, String sessionId) {
+        playersRepository.initPlayer(playerName, sessionId);
     }
 
     private MessageHeaders createHeaders(String sessionId) {

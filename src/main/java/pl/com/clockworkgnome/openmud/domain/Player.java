@@ -39,4 +39,10 @@ public class Player {
     public int hashCode() {
         return Objects.hash(name);
     }
+
+    public void move(String direction) {
+        Location newLocation = currentLocation.getNextLocation(direction);
+        currentLocation.removePlayer(this);
+        this.setCurrentLocation(newLocation);
+    }
 }
