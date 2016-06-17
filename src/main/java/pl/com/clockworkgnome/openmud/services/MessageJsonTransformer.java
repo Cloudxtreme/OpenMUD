@@ -23,6 +23,7 @@ public class MessageJsonTransformer {
         next(sb);
         addKeyValue(sb, "long",currentLocation.getLongDescription());
         next(sb);
+
         List<Player> playersWithourPlayer = new ArrayList<>(currentLocation.getPlayers());
         playersWithourPlayer.remove(player);
         sb.append("\"players\":[");
@@ -36,7 +37,9 @@ public class MessageJsonTransformer {
             sb.append("{\"name\":\""+playersWithourPlayer.get(size-1).getName()+"\"}");
         }
         sb.append("]");
+
         next(sb);
+
         sb.append("\"exits\":[");
         Set<Exit> exits = currentLocation.getExits().keySet();
         int i = 0;
@@ -48,6 +51,7 @@ public class MessageJsonTransformer {
             }
         }
         sb.append("]");
+
         return wrap(sb);
     }
 
