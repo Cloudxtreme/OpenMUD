@@ -20,7 +20,7 @@ public class Player {
     public String getSessionId() { return sessionId; }
 
     public void setCurrentLocation(Location currentLocation) {
-        this.currentLocation = currentLocation;
+        this.currentLocation=currentLocation;
     }
 
     public Location getCurrentLocation() {
@@ -43,6 +43,6 @@ public class Player {
     public void move(String direction) {
         Location newLocation = currentLocation.getNextLocation(direction);
         currentLocation.removePlayer(this);
-        this.setCurrentLocation(newLocation);
+        newLocation.addPlayer(this);
     }
 }

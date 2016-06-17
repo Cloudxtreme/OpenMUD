@@ -27,4 +27,28 @@ public class PlayersRepositoryTest {
         assertEquals(xxx,fromRepo);
         assertEquals(fromRepo.getSessionId(),"123");
     }
+
+    @Test
+    public void initTwoPlayersSameLocation() {
+        final Player first = repository.initPlayer("XXX", "--");
+        final Player second = repository.initPlayer("YYY", "--");
+
+        assertEquals(2,first.getCurrentLocation().getPlayers().size());
+    }
+
+    @Test
+    public void initTwoPlayersSameLocationOneLeaves() {
+        final Player first = repository.initPlayer("XXX", "--");
+        final Player second = repository.initPlayer("YYY", "--");
+
+        assertEquals(first.getCurrentLocation().getPlayers().size(),2);
+
+        final Exit firstExit = first.getCurrentLocation().getExits().keySet().iterator().next();
+
+        first.move(firstExit.exitString);
+
+        assertEquals(1,first.getCurrentLocation().getPlayers().size());
+        assertEquals(1,second.getCurrentLocation().getPlayers().size());
+        assertNotEquals(first.getCurrentLocation(),second.getCurrentLocation());
+    }
 }

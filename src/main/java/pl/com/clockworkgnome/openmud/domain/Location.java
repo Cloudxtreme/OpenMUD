@@ -1,7 +1,5 @@
 package pl.com.clockworkgnome.openmud.domain;
 
-import com.google.gson.Gson;
-
 import java.util.*;
 
 public class Location {
@@ -66,5 +64,24 @@ public class Location {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Location location = (Location) o;
+
+        if (id != location.id) return false;
+        return shortDescription != null ? shortDescription.equals(location.shortDescription) : location.shortDescription == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + (shortDescription != null ? shortDescription.hashCode() : 0);
+        return result;
     }
 }

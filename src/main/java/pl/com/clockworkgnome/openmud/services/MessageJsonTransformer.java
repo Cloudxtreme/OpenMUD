@@ -16,13 +16,13 @@ public class MessageJsonTransformer {
 
     public String locationLook(Player player) {
         final Location currentLocation = player.getCurrentLocation();
-        StringBuffer sb = new StringBuffer("{");
-        sb.append("\"type\": \"Location\"");
-        sb.append(",");
-        sb.append("\"short\": \""+currentLocation.getShortDescription()+"\"");
-        sb.append(",");
-        sb.append("\"long\": \""+currentLocation.getLongDescription()+"\"");
-        sb.append(",");
+        StringBuffer sb = new StringBuffer("");
+        addKeyValue(sb, "type","Location");
+        next(sb);
+        addKeyValue(sb, "short",currentLocation.getShortDescription());
+        next(sb);
+        addKeyValue(sb, "long",currentLocation.getLongDescription());
+        next(sb);
         List<Player> playersWithourPlayer = new ArrayList<>(currentLocation.getPlayers());
         playersWithourPlayer.remove(player);
         sb.append("\"players\":[");
@@ -36,9 +36,8 @@ public class MessageJsonTransformer {
             sb.append("{\"name\":\""+playersWithourPlayer.get(size-1).getName()+"\"}");
         }
         sb.append("]");
-        sb.append(",");
+        next(sb);
         sb.append("\"exits\":[");
-        int noExits = currentLocation.getExits().size();
         Set<Exit> exits = currentLocation.getExits().keySet();
         int i = 0;
         for(Exit e : exits) {
@@ -49,34 +48,42 @@ public class MessageJsonTransformer {
             }
         }
         sb.append("]");
-        sb.append("}");
-        return sb.toString();
+        return wrap(sb);
     }
 
     public String getSayResponse(String text) {
-        StringBuffer sb = new StringBuffer("{");
-        sb.append("\"type\": \"Say\"");
-        sb.append(",");
-        sb.append("\"message\": \"You say: "+text+"\"");
-        sb.append("}");
-        return sb.toString();
+        StringBuffer sb = new StringBuffer("");
+        addKeyValue(sb, "type","Say");
+        next(sb);
+        addKeyValue(sb,"message","You say: "+text);
+        return wrap(sb);
     }
 
     public String getSayOtherResponse(String text, String playerName) {
-        StringBuffer sb = new StringBuffer("{");
-        sb.append("\"type\": \"Say\"");
-        sb.append(",");
-        sb.append("\"message\":\""+ playerName + " says: "+ text +"\"");
-        sb.append("}");
-        return sb.toString();
+        StringBuffer sb = new StringBuffer("");
+        addKeyValue(sb, "type","Say");
+        next(sb);
+        addKeyValue(sb,"message",playerName + " says: "+ text);
+        return wrap(sb);
     }
 
     public String playerLeaves(String name, String where) {
-        StringBuffer sb = new StringBuffer("{");
-        sb.append("\"type\": \"Leaves\"");
+        StringBuffer sb = new StringBuffer("");
+        addKeyValue(sb,"type","Leaves");
+        next(sb);
+        addKeyValue(sb,"message",name+" goes "+where);
+        return wrap(sb);
+    }
+
+    private void next(StringBuffer sb) {
         sb.append(",");
-        sb.append("\"message\":\""+ name + " goes " + where + "\"");
-        sb.append("}");
-        return sb.toString();
+    }
+
+    private String wrap(StringBuffer sb) {
+        return "{"+sb.toString()+"}";
+    }
+
+    private void addKeyValue(StringBuffer sb, String key, String value) {
+        sb.append("\""+key+"\":\""+value+"\"");
     }
 }
