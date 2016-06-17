@@ -1,3 +1,5 @@
 {
-  "directory" : "src/main/resources/static/lib"
+  "directory" : "src/main/resources/static/lib",
+  "proxy" : "http://SG0922019:trinity1@www-ad-proxy.sabre.com:80",
+  "https-proxy" : "http://SG0922019:trinity1@www-ad-proxy.sabre.com:80"
 }

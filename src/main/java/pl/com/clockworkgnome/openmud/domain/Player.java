@@ -20,7 +20,7 @@ public class Player {
     public String getSessionId() { return sessionId; }
 
     public void setCurrentLocation(Location currentLocation) {
-        this.currentLocation = currentLocation;
+        this.currentLocation=currentLocation;
     }
 
     public Location getCurrentLocation() {
@@ -38,5 +38,11 @@ public class Player {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    public void move(String direction) {
+        Location newLocation = currentLocation.getNextLocation(direction);
+        currentLocation.removePlayer(this);
+        newLocation.addPlayer(this);
     }
 }
