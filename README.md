@@ -7,4 +7,6 @@ This project is an attempt to create open source mud - where every person with b
 Every game needs a setting - I've choosen Warhammer 40k universe. Very rich, diverse, dark.. and one that have both magic AND spaceships :)
 
 
-Version 0.1 has been released :) Basic functions have been added - player movement, looking at room and communication.
+####Version 0.1 
+
+has been released :) Basic functions have been added - player movement, looking at room and communication.
