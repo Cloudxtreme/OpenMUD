@@ -8,6 +8,7 @@ public class Location {
     private String longDescription;
     private Map<Exit, Location> exits = new EnumMap<>(Exit.class);
     private List<Player> players = new ArrayList<>();
+    private List<NPC> npcs = new ArrayList<>();
 
     public Location(int id, String shortDescription, String longDescription) {
         this.id = id;
@@ -83,5 +84,13 @@ public class Location {
         int result = id;
         result = 31 * result + (shortDescription != null ? shortDescription.hashCode() : 0);
         return result;
+    }
+
+    public void removeNPC(NPC npc) {
+        this.npcs.remove(npc);
+    }
+
+    public void addNPC(NPC npc) {
+        this.npcs.add(npc);
     }
 }

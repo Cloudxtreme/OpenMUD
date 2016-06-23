@@ -6,8 +6,16 @@ public enum Exit {
     public String exitString;
     public String shortString;
 
-    Exit(String exitString, String shortString) {
+    Exit(String shortString, String exitString) {
         this.exitString = exitString;
         this.shortString = shortString;
+    }
+
+    public String getExitString() {
+        return exitString;
+    }
+
+    public String getShortString() {
+        return shortString;
     }
 }

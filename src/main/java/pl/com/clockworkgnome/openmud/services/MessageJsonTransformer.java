@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import pl.com.clockworkgnome.openmud.domain.Exit;
 import pl.com.clockworkgnome.openmud.domain.Location;
 import pl.com.clockworkgnome.openmud.domain.Player;
+import pl.com.clockworkgnome.openmud.util.ReflectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -23,36 +25,27 @@ public class MessageJsonTransformer {
         next(sb);
         addKeyValue(sb, "long",currentLocation.getLongDescription());
         next(sb);
-
         List<Player> playersWithourPlayer = new ArrayList<>(currentLocation.getPlayers());
         playersWithourPlayer.remove(player);
-        sb.append("\"players\":[");
-        int size = playersWithourPlayer.size();
-        if(size==1) {
-            sb.append("{\"name\":\""+playersWithourPlayer.get(0).getName()+"\"}");
-        } else if(size>1) {
-            for(int i=0;i<size-1;i++) {
-                sb.append("{\"name\":\""+playersWithourPlayer.get(i).getName()+"\"},");
-            }
-            sb.append("{\"name\":\""+playersWithourPlayer.get(size-1).getName()+"\"}");
-        }
-        sb.append("]");
-
+        addCollectionValue(sb,"players",playersWithourPlayer,"name","name");
         next(sb);
+        addCollectionValue(sb,"exits",currentLocation.getExits().keySet(),"exit","exitString");
+        return wrap(sb);
+    }
 
-        sb.append("\"exits\":[");
-        Set<Exit> exits = currentLocation.getExits().keySet();
+    private void addCollectionValue(StringBuffer sb, String key, Collection valuesCollection, String collectionElementKeyValue, String collectionElementParamName) {
+        sb.append("\""+key+"\":[");
+
+        int size = valuesCollection.size();
         int i = 0;
-        for(Exit e : exits) {
+        for(Object o : valuesCollection) {
             i++;
-            sb.append("{\"exit\":\""+e.exitString+"\"}");
+            sb.append("{\""+collectionElementKeyValue+"\":\""+String.valueOf(ReflectionUtils.runGetter(collectionElementParamName,o))+"\"}");
             if(i<size) {
                 sb.append(",");
             }
         }
         sb.append("]");
-
-        return wrap(sb);
     }
 
     public String getSayResponse(String text) {
